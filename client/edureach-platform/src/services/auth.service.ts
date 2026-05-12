@@ -21,15 +21,3 @@ export const getMe = async () => {
   const res = await API.get("/auth/me");
   return res.data.data; // { user }
 };
-
-
-
-
-
-
-
-
-
-
-
-
