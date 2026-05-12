@@ -6,39 +6,34 @@ const PORT = process.env.PORT || 5000;
 
 const start = async (): Promise<void> => {
   try {
-    // 1. Connect Mongoose (for users collection)
+    // Connect MongoDB
     await connectDB();
+    console.log(" MongoDB connected successfully");
 
-    // 2. Index knowledge base if not already done
-    //    First run: loads .txt → splits → embeds → stores in MongoDB
-    //    Subsequent runs: sees data exists, skips
+    // Initialize RAG knowledge base
     await initializeKnowledgeBase();
+    console.log(" Knowledge base initialized");
 
-    // 3. Start Express
-    app.listen(PORT, () => {
-      console.log(` EduReach Server is running!`);
-      console.log(` URL: http://localhost:${PORT}`);
-      console.log(` Node: ${process.version}`);
-      console.log(` Press Ctrl+C to stop`);
+    // Root route for Render health check
+    app.get("/", (_req, res) => {
+      res.status(200).json({
+        success: true,
+        message: "EduReach Backend Running Successfully"
+      });
     });
+
+    // Start Express server
+    app.listen(PORT, () => {
+      console.log(" EduReach Server is running!");
+      console.log(` Port: ${PORT}`);
+      console.log(` Environment: ${process.env.NODE_ENV || "development"}`);
+      console.log(` Node Version: ${process.version}`);
+    });
+
   } catch (error) {
-    console.error("Failed to start server:", error);
+    console.error(" Failed to start server:", error);
     process.exit(1);
   }
 };
 
 start();
-
-
-
-
-
-
-
-
-
-
-
-
-
-
