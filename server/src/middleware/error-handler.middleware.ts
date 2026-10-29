@@ -14,6 +14,11 @@ const errorHandler = (err: AppError, req: Request, res: Response, _next: NextFun
   let statusCode = err.statusCode || 500;
   let message = err.message || "Internal Server Error";
 
+  // CORS policy violation error
+  if (err.message && err.message.startsWith("CORS policy violation")) {
+    statusCode = 403;
+  }
+
   // MongoDB duplicate key error
   if (err.code === 11000) {
     statusCode = 409;

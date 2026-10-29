@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { loginUser } from "../services/auth.service";
 import { useAuth } from "../context/AuthContext";
 import { images } from "../data/content";
+import { getAuthErrorMessage } from "../utils/error.util";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -15,7 +16,7 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!email || !password) {
+    if (!email.trim() || !password) {
       toast.error("Please fill in all fields");
       return;
     }
@@ -23,12 +24,12 @@ export default function LoginPage() {
     setLoading(true);
     try {
       // loginUser now returns { token, user } directly
-      const data = await loginUser({ email, password });
+      const data = await loginUser({ email: email.trim(), password });
       login(data.token);
       toast.success("Welcome back!");
       navigate("/");
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Login failed");
+      toast.error(getAuthErrorMessage(err, "Login failed"));
     } finally {
       setLoading(false);
     }

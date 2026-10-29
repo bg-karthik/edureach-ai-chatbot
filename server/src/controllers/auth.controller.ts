@@ -10,7 +10,10 @@ export const register = async (req: Request, res: Response, next: NextFunction):
   try {
     const { name, email, password, phone } = req.body;
 
-    if (!name || !email || !password) {
+    const trimmedName = typeof name === "string" ? name.trim() : "";
+    const normalizedEmail = typeof email === "string" ? email.toLowerCase().trim() : "";
+
+    if (!trimmedName || !normalizedEmail || !password) {
       res.status(400).json({ success: false, message: "Name, email, and password are required." });
       return;
     }
@@ -20,7 +23,7 @@ export const register = async (req: Request, res: Response, next: NextFunction):
       return;
     }
 
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       res.status(409).json({ success: false, message: "An account with this email already exists." });
       return;
@@ -28,12 +31,17 @@ export const register = async (req: Request, res: Response, next: NextFunction):
 
     const hashedPassword = await hashPassword(password);
 
-    const user = await User.create({
-      name,
-      email: email.toLowerCase(),
+    const newUserData: { name: string; email: string; password: string; phone?: string } = {
+      name: trimmedName,
+      email: normalizedEmail,
       password: hashedPassword,
-      phone: phone || null,
-    });
+    };
+
+    if (typeof phone === "string" && phone.trim()) {
+      newUserData.phone = phone.trim();
+    }
+
+    const user = await User.create(newUserData);
 
     const token = generateToken({ userId: user._id.toString(), email: user.email });
 
@@ -59,12 +67,14 @@ export const login = async (req: Request, res: Response, next: NextFunction): Pr
   try {
     const { email, password } = req.body;
 
-    if (!email || !password) {
+    const normalizedEmail = typeof email === "string" ? email.toLowerCase().trim() : "";
+
+    if (!normalizedEmail || !password) {
       res.status(400).json({ success: false, message: "Email and password are required." });
       return;
     }
 
-    const user = await User.findOne({ email: email.toLowerCase() });
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       res.status(401).json({ success: false, message: "Invalid email or password." });
       return;

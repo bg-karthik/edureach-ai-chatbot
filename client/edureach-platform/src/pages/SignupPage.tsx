@@ -5,6 +5,7 @@ import toast from "react-hot-toast";
 import { registerUser } from "../services/auth.service";
 import { useAuth } from "../context/AuthContext";
 import { images } from "../data/content";
+import { getAuthErrorMessage } from "../utils/error.util";
 
 export default function SignupPage() {
   const [name, setName] = useState("");
@@ -17,20 +18,30 @@ export default function SignupPage() {
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!name || !email || !password) {
+    if (!name.trim() || !email.trim() || !password) {
       toast.error("Please fill in required fields");
+      return;
+    }
+
+    if (password.length < 6) {
+      toast.error("Password must be at least 6 characters");
       return;
     }
 
     setLoading(true);
     try {
       // registerUser now returns { token, user } directly
-      const data = await registerUser({ name, email, password, phone: phone || undefined });
+      const data = await registerUser({
+        name: name.trim(),
+        email: email.trim(),
+        password,
+        phone: phone.trim() || undefined,
+      });
       login(data.token);
       toast.success("Account created! Welcome to EduReach.");
       navigate("/");
     } catch (err: any) {
-      toast.error(err.response?.data?.message || "Registration failed");
+      toast.error(getAuthErrorMessage(err, "Registration failed"));
     } finally {
       setLoading(false);
     }

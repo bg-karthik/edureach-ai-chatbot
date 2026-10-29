@@ -14,14 +14,6 @@ const start = async (): Promise<void> => {
     await initializeKnowledgeBase();
     console.log(" Knowledge base initialized");
 
-    // Root route for Render health check
-    app.get("/", (_req, res) => {
-      res.status(200).json({
-        success: true,
-        message: "EduReach Backend Running Successfully"
-      });
-    });
-
     // Start Express server
     app.listen(PORT, () => {
       console.log(" EduReach Server is running!");

@@ -4,9 +4,10 @@
   "main": "src/server.ts",
   "type": "module",
   "scripts": {
-    "dev": "node --env-file=.env --watch-path=./src src/server.ts",
+    "dev": "node --env-file=.env --experimental-transform-types --watch-path=./src src/server.ts",
     "start": "node --experimental-transform-types src/server.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "test": "node --env-file=.env --experimental-transform-types src/tests/auth-and-features.test.mjs"
   },
   "author": "Bhanuri pranathi",
   "license": "MIT",
