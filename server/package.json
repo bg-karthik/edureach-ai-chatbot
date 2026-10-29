@@ -7,7 +7,8 @@
     "dev": "node --env-file=.env --experimental-transform-types --watch-path=./src src/server.ts",
     "start": "node --experimental-transform-types src/server.ts",
     "build": "tsc",
-    "test": "node --env-file=.env --experimental-transform-types src/tests/auth-and-features.test.mjs"
+    "test": "node --env-file=.env --experimental-transform-types src/tests/auth-and-features.test.mjs && node --env-file=.env --experimental-transform-types src/tests/vapi-integration.test.mjs",
+    "test:vapi": "node --env-file=.env --experimental-transform-types src/tests/vapi-integration.test.mjs"
   },
   "author": "Bhanuri pranathi",
   "license": "MIT",

@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { X, Phone, CheckCircle, AlertCircle, Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { useAuth } from "../context/AuthContext";
-import { initiateCall } from "../services/vapi.service";
+import { initiateCall, getCallStatus } from "../services/vapi.service";
 import { vapiFormContent } from "../data/content";
+import { getAuthErrorMessage } from "../utils/error.util";
 
 interface CallPopupProps {
   open: boolean;
@@ -18,43 +19,112 @@ export default function CallPopup({ open, onClose }: CallPopupProps) {
   const [course, setCourse] = useState("");
   const [topic, setTopic] = useState("");
   const [status, setStatus] = useState<CallStatus>("form");
+  const [statusDetail, setStatusDetail] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const pollTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (pollTimerRef.current) {
+        clearInterval(pollTimerRef.current);
+      }
+    };
+  }, []);
 
   const handleSubmit = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (!phone || !course || !topic) {
+    if (status !== "form") return;
+
+    if (!phone.trim() || !course || !topic) {
       toast.error("Please fill in all fields");
       return;
     }
 
-    if (phone.length < 10) {
-      toast.error("Enter valid phone number");
+    if (phone.replace(/[^0-9]/g, "").length < 10) {
+      toast.error("Please enter a valid phone number (at least 10 digits)");
       return;
     }
 
     setStatus("calling");
+    setStatusDetail(`Dialing ${phone.trim()} via Voice AI counselor...`);
+    setErrorMessage("");
 
     try {
-      await initiateCall({
-        phoneNumber: phone,
+      const res = await initiateCall({
+        phoneNumber: phone.trim(),
         preferredCourse: course,
         queryTopic: topic,
       });
 
-      setStatus("done");
-      toast.success("Call initiated!");
-    } catch (error) {
-      console.error(error);
+      const callId = res?.data?.callId;
+      if (callId) {
+        let attempts = 0;
+        const maxAttempts = 10; // ~30 seconds
+
+        pollTimerRef.current = setInterval(async () => {
+          attempts++;
+          try {
+            const statusRes = await getCallStatus(callId);
+            const callData = statusRes?.data;
+
+            if (callData) {
+              if (callData.displayStatus) {
+                setStatusDetail(callData.displayStatus);
+              }
+
+              if (callData.status === "in-progress") {
+                setStatusDetail("Call connected! AI Counselor Ava is speaking.");
+              }
+
+              if (callData.isFinished) {
+                if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+
+                if (callData.status === "ended" && (!callData.endedReason || callData.endedReason.includes("customer-ended") || callData.endedReason.includes("assistant-ended"))) {
+                  setStatus("done");
+                  setStatusDetail("Call completed successfully. Thank you for speaking with EduReach!");
+                  toast.success("Call completed!");
+                } else {
+                  setStatus("error");
+                  setErrorMessage(callData.displayStatus || "Call was disconnected or could not reach destination.");
+                  toast.error("Call ended unexpectedly.");
+                }
+              }
+            }
+          } catch {
+            // Polling error, continue
+          }
+
+          if (attempts >= maxAttempts) {
+            if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+            setStatus("done");
+            setStatusDetail(`Call dispatched! You will receive a ring shortly on ${phone.trim()}.`);
+          }
+        }, 3000);
+      } else {
+        setStatus("done");
+        setStatusDetail(`Call initiated! You will receive a call shortly on ${phone.trim()}.`);
+        toast.success("Call initiated!");
+      }
+    } catch (error: any) {
+      if (pollTimerRef.current) clearInterval(pollTimerRef.current);
+      const msg = getAuthErrorMessage(error, "Failed to initiate call.");
       setStatus("error");
-      toast.error("Failed to initiate call.");
+      setErrorMessage(msg);
+      toast.error(msg);
     }
   };
 
   const reset = () => {
+    if (pollTimerRef.current) {
+      clearInterval(pollTimerRef.current);
+    }
     setStatus("form");
     setPhone("");
     setCourse("");
     setTopic("");
+    setStatusDetail("");
+    setErrorMessage("");
   };
 
   const handleClose = () => {
@@ -171,9 +241,10 @@ export default function CallPopup({ open, onClose }: CallPopupProps) {
               {/* Submit */}
               <button
                 type="submit"
+                disabled={status !== "form"}
                 aria-label="Call now"
                 title="Call now"
-                className="w-full bg-maroon text-white py-3 rounded-lg font-semibold hover:bg-maroon-dark"
+                className="w-full bg-maroon text-white py-3 rounded-lg font-semibold hover:bg-maroon-dark disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 📞 Call Me Now
               </button>
@@ -188,7 +259,7 @@ export default function CallPopup({ open, onClose }: CallPopupProps) {
                 Calling you now...
               </h3>
               <p className="text-gray-500 text-sm">
-                Our AI counselor Ava is dialing {phone}
+                {statusDetail || `Our AI counselor Ava is dialing ${phone}`}
               </p>
             </div>
           )}
@@ -198,10 +269,10 @@ export default function CallPopup({ open, onClose }: CallPopupProps) {
             <div className="text-center py-10">
               <CheckCircle className="w-10 h-10 text-green-500 mx-auto mb-3" />
               <h3 className="text-lg font-bold text-gray-900 mb-1">
-                Call Initiated!
+                Call Dispatched!
               </h3>
               <p className="text-gray-500 text-sm mb-4">
-                You'll receive a call shortly on {phone}.
+                {statusDetail || `You'll receive a call shortly on ${phone}.`}
               </p>
               <button
                 onClick={reset}
@@ -217,10 +288,10 @@ export default function CallPopup({ open, onClose }: CallPopupProps) {
             <div className="text-center py-10">
               <AlertCircle className="w-10 h-10 text-red-500 mx-auto mb-3" />
               <h3 className="text-lg font-bold text-gray-900 mb-1">
-                Call Failed
+                Call Not Completed
               </h3>
               <p className="text-gray-500 text-sm mb-4">
-                Something went wrong. Please try again.
+                {errorMessage || "Something went wrong. Please check your phone number and try again."}
               </p>
               <button
                 onClick={reset}

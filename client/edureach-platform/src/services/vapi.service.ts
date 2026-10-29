@@ -13,3 +13,8 @@ export const initiateCall = async (data: {
 
   return res.data;
 };
+
+export const getCallStatus = async (callId: string) => {
+  const res = await API.get(`/vapi/call/${callId}`);
+  return res.data;
+};

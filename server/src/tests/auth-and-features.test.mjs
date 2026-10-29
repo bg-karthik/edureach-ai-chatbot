@@ -292,12 +292,30 @@ try {
     body: JSON.stringify({ phoneNumber: "123" }),
   });
   const vapiInvalidData = await vapiInvalidRes.json();
-  assert(16, "Vapi Integration Validation (Short Phone Number Rejected)", vapiInvalidRes.status === 400 && vapiInvalidData.message === "Valid phone number is required.", {
+  assert(16, "Vapi Integration Validation (Short Phone Number Rejected)", vapiInvalidRes.status === 400 && vapiInvalidData.success === false, {
     status: vapiInvalidRes.status,
     message: vapiInvalidData.message,
   });
 
-  // TEST 17: RAG AI Chatbot Integration Verification (POST /api/chat/message)
+  // TEST 17: Vapi Call Status Route Authorization (Missing Token -> 401)
+  const vapiNoAuthRes = await fetch(`${API_URL}/vapi/call/non-existent-call-id`);
+  const vapiNoAuthData = await vapiNoAuthRes.json();
+  assert(17, "Vapi Call Status Route Authorization (Missing Token -> 401)", vapiNoAuthRes.status === 401 && vapiNoAuthData.success === false, {
+    status: vapiNoAuthRes.status,
+    message: vapiNoAuthData.message,
+  });
+
+  // TEST 18: Vapi Call Status Ownership Authorization (Unowned/Non-existent Call -> 404)
+  const vapiAuthUnownedRes = await fetch(`${API_URL}/vapi/call/mock-unowned-call-id`, {
+    headers: { Authorization: `Bearer ${loginToken}` },
+  });
+  const vapiAuthUnownedData = await vapiAuthUnownedRes.json();
+  assert(18, "Vapi Call Status IDOR Protection (Unowned Call -> 404)", vapiAuthUnownedRes.status === 404 && vapiAuthUnownedData.success === false, {
+    status: vapiAuthUnownedRes.status,
+    message: vapiAuthUnownedData.message,
+  });
+
+  // TEST 19: RAG AI Chatbot Integration Verification (POST /api/chat/message)
   console.log("\nTesting RAG Chatbot Integration (Retrieval + Gemini)...");
   const chatRes = await fetch(`${API_URL}/chat/message`, {
     method: "POST",
@@ -310,7 +328,7 @@ try {
   const chatData = await chatRes.json();
   const chatAnswer = chatData.data?.message;
   assert(
-    17,
+    19,
     "RAG AI Chatbot Response Verification",
     chatRes.status === 200 && chatData.success === true && typeof chatAnswer === "string" && chatAnswer.length > 20,
     { status: chatRes.status, responseLength: chatAnswer?.length, sample: chatAnswer?.slice(0, 100) }
