@@ -7,10 +7,11 @@
     "dev": "node --env-file=.env --experimental-transform-types --watch-path=./src src/server.ts",
     "start": "node --experimental-transform-types src/server.ts",
     "build": "tsc",
-    "test": "node --env-file=.env --experimental-transform-types src/tests/auth-and-features.test.mjs && node --env-file=.env --experimental-transform-types src/tests/vapi-integration.test.mjs && node --env-file=.env --experimental-transform-types src/tests/persistent-call-tracking.test.mjs && node --env-file=.env --experimental-transform-types src/tests/chat-privacy-isolation.test.mjs",
+    "test": "node --env-file=.env --experimental-transform-types src/tests/auth-and-features.test.mjs && node --env-file=.env --experimental-transform-types src/tests/vapi-integration.test.mjs && node --env-file=.env --experimental-transform-types src/tests/persistent-call-tracking.test.mjs && node --env-file=.env --experimental-transform-types src/tests/chat-privacy-isolation.test.mjs && node --env-file=.env --experimental-transform-types src/tests/rag-pipeline.test.mjs",
     "test:vapi": "node --env-file=.env --experimental-transform-types src/tests/vapi-integration.test.mjs",
     "test:persistent": "node --env-file=.env --experimental-transform-types src/tests/persistent-call-tracking.test.mjs",
-    "test:privacy": "node --env-file=.env --experimental-transform-types src/tests/chat-privacy-isolation.test.mjs"
+    "test:privacy": "node --env-file=.env --experimental-transform-types src/tests/chat-privacy-isolation.test.mjs",
+    "test:rag": "node --env-file=.env --experimental-transform-types src/tests/rag-pipeline.test.mjs"
   },
   "author": "Bhanuri pranathi",
   "license": "MIT",

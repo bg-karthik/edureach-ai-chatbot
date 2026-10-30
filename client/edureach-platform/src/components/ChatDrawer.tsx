@@ -138,12 +138,18 @@ export default function ChatDrawer({ open, onClose }: ChatDrawerProps) {
         return;
       }
 
-      setErrorMessage("Sorry, something went wrong. Please try again.");
+      const userFriendlyError =
+        err?.response?.data?.message ||
+        (err?.code === "ECONNABORTED"
+          ? "The AI counselor request timed out. Please try again."
+          : "Sorry, I encountered an issue. Please try again.");
+
+      setErrorMessage(userFriendlyError);
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now() + 1,
-          text: "Sorry, I encountered an issue. Please try again.",
+          text: userFriendlyError,
           sender: "bot",
         },
       ]);

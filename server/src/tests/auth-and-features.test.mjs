@@ -327,10 +327,22 @@ try {
   });
   const chatData = await chatRes.json();
   const chatAnswer = chatData.data?.message;
+  const isGenuineAnswer =
+    chatRes.status === 200 &&
+    chatData.success === true &&
+    typeof chatAnswer === "string" &&
+    chatAnswer.length > 20 &&
+    !chatAnswer.includes("trouble right now") &&
+    !chatAnswer.includes("maximum capacity") &&
+    (chatAnswer.toLowerCase().includes("computer") ||
+      chatAnswer.toLowerCase().includes("b.tech") ||
+      chatAnswer.toLowerCase().includes("engineering") ||
+      chatAnswer.toLowerCase().includes("edureach"));
+
   assert(
     19,
-    "RAG AI Chatbot Response Verification",
-    chatRes.status === 200 && chatData.success === true && typeof chatAnswer === "string" && chatAnswer.length > 20,
+    "RAG AI Chatbot Response Verification (Genuine Knowledge Answer)",
+    isGenuineAnswer,
     { status: chatRes.status, responseLength: chatAnswer?.length, sample: chatAnswer?.slice(0, 100) }
   );
 

@@ -35,7 +35,7 @@ globalThis.fetch = async (input, init) => {
   if (urlStr.includes("generativelanguage.googleapis.com")) {
     if (urlStr.includes(":embedContent") || urlStr.includes(":batchEmbedContents")) {
       return new Response(JSON.stringify({
-        embedding: { values: new Array(768).fill(0.01) }
+        embedding: { values: new Array(3072).fill(0.01) }
       }), { status: 200, headers: { "Content-Type": "application/json" } });
     }
     return new Response(JSON.stringify({
