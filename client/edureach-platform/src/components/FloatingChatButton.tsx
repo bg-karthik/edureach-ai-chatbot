@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { MessageCircle, X } from "lucide-react";
 import { useAuth } from "../context/AuthContext";
@@ -9,18 +9,33 @@ export default function FloatingChatButton() {
   const navigate = useNavigate();
   const [chatOpen, setChatOpen] = useState(false);
 
+  // Close ChatDrawer immediately on logout or when user is null
+  useEffect(() => {
+    if (!user) {
+      setChatOpen(false);
+    }
+  }, [user]);
+
   const handleClick = () => {
     if (user) {
       setChatOpen((prev) => !prev);
     } else {
+      setChatOpen(false);
       navigate("/login");
     }
   };
 
   return (
     <>
-      {/* Chat Drawer */}
-      <ChatDrawer open={chatOpen} onClose={() => setChatOpen(false)} />
+      {/* Chat Drawer — Keyed by user.id so that when the authenticated user ID changes,
+          the entire component instance is unmounted and recreated with fresh state */}
+      {user && (
+        <ChatDrawer
+          key={user.id}
+          open={chatOpen}
+          onClose={() => setChatOpen(false)}
+        />
+      )}
 
       {/* Floating Button */}
       <button

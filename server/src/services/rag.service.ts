@@ -40,6 +40,7 @@ const getEmbeddings = () => {
   return new GoogleGenerativeAIEmbeddings({
     apiKey: getApiKey(),
     model: "gemini-embedding-001",
+    maxRetries: 0,
   });
 };
 
@@ -144,6 +145,7 @@ export const getRAGResponse = async (
       model: "gemini-2.5-flash",
       temperature: 0.7,
       apiKey: getApiKey(), // ✅ FIXED
+      maxRetries: 0,
     });
 
     const agent = createAgent({
