@@ -51,10 +51,12 @@ export default function CallPopup({ open, onClose }: CallPopupProps) {
     setErrorMessage("");
 
     try {
+      const idempotencyKey = `${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
       const res = await initiateCall({
         phoneNumber: phone.trim(),
         preferredCourse: course,
         queryTopic: topic,
+        idempotencyKey,
       });
 
       const callId = res?.data?.callId;

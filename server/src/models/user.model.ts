@@ -5,6 +5,7 @@ export interface IUser extends Document {
   email: string;
   password: string;
   phone?: string;
+  callLockUntil?: Date | null;
   created_at: Date;
 }
 
@@ -38,6 +39,11 @@ const UserSchema: Schema<IUser> = new Schema({
   phone: {
     type: String,
     trim: true,
+    default: null,
+  },
+
+  callLockUntil: {
+    type: Date,
     default: null,
   },
 

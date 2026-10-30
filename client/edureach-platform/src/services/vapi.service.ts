@@ -4,11 +4,13 @@ export const initiateCall = async (data: {
   phoneNumber: string;
   preferredCourse?: string;
   queryTopic?: string;
+  idempotencyKey?: string;
 }) => {
   const res = await API.post("/vapi/call", {
     phoneNumber: data.phoneNumber,
     preferredCourse: data.preferredCourse || "",
     queryTopic: data.queryTopic || "",
+    idempotencyKey: data.idempotencyKey || undefined,
   });
 
   return res.data;
